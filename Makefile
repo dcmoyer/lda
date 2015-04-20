@@ -5,6 +5,9 @@ fifa_corpus:
 document: document.cpp
 	g++ -c -o document.o document.cpp
 
+lda: lda.cpp
+	g++ -c -o lda.o lda.cpp
+
 clean:
 	rm *.o
 	rm *.exe

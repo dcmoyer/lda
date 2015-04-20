@@ -34,6 +34,9 @@ public:
   int get_word_topic(int index);
   void set_word_topic(int index, int topic);
 
+  int num_words(){
+    return words.size();
+  }
 };
 
 #endif

@@ -10,5 +10,8 @@
 #include <vector>
 #include <cassert>
 
+#include<boost/numeric/ublas/io.hpp>
+#include<boost/numeric/ublas/matrix.hpp>
+
 #endif
 
