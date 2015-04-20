@@ -11,17 +11,22 @@ private:
   std::string vocab_path;
   int K;
   int V;
+  double alpha;
+  double beta;
 
   boost::numeric::ublas::matrix<int>* topic_x_words;
   boost::numeric::ublas::matrix<int>* total_words_in_topics;
 public:
   LDA();
-  LDA(std::vector<std::string>& list_of_filenames, std::string _path, int _K){
+  LDA(std::vector<std::string>& list_of_filenames, std::string _path, int _K
+    double _alpha, double _beta){
     for(int i = 0; i < list_of_filenames.size(); ++i){
       filenames.push_back(list_of_filenames[i]);
     }
     vocab_path = _path;
     K = _K;
+    alpha = _alpha;
+    beta = _beta;
 
     int word;
     std::string true_word;
