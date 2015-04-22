@@ -11,6 +11,8 @@ private:
   std::string vocab_path;
   int K;
   int V;
+  int burnin;
+  int thinning;
   double alpha;
   double beta;
 
@@ -18,8 +20,8 @@ private:
   boost::numeric::ublas::matrix<int>* total_words_in_topics;
 public:
   LDA();
-  LDA(std::vector<std::string>& list_of_filenames, std::string _path, int _K
-    double _alpha, double _beta){
+  LDA(std::vector<std::string>& list_of_filenames, std::string _path, int _K,
+    double _alpha, double _beta, int _burnin, int _thinning){
     for(int i = 0; i < list_of_filenames.size(); ++i){
       filenames.push_back(list_of_filenames[i]);
     }
@@ -27,6 +29,8 @@ public:
     K = _K;
     alpha = _alpha;
     beta = _beta;
+    burnin = _burnin;
+    thinning = _thinning;
 
     int word;
     std::string true_word;
