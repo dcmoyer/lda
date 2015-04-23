@@ -102,6 +102,7 @@ void LDA::run_iterations(int num_iterations){
         
         while(prob > 0){
           new_topic += 1;
+          prob -= topic_dist(topic_idx,0);
         }
         assert(new_topic < K);
 
@@ -120,7 +121,7 @@ void LDA::run_iterations(int num_iterations){
   }
 }
 //void LDA::print_topic_dist(std::string topic_file_name);
-//void LDA::print_doc_dist(int index);
+//void LDA::print_doc_dist(std::string doc_dist_file_name, int index);
 //void LDA::load_topic_dist(std::string topic_file_name);
 
 
