@@ -6,7 +6,7 @@
 void Document::load_document(){
   
   words.clear();
-  std::ifstream s((path_to_document + "_words.txt").c_str(), std::ifstream::in);
+  std::ifstream s((path_to_document).c_str(), std::ifstream::in);
   int temp;
   
   while(!s.eof()){

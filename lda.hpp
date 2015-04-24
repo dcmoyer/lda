@@ -38,10 +38,9 @@ public:
     V = 0;
 
     while(!s.eof()){
-      s >> true_word >> word;
+      s >> word >> true_word;
       V++;
     }
-
     topic_x_words = new boost::numeric::ublas::matrix<int>(K,V);
     total_words_in_topics = new boost::numeric::ublas::matrix<int>(K,1);
   }
@@ -55,6 +54,7 @@ public:
   void run_iterations(int num_iterations);
 
   void print_topic_dist(std::string topic_file_name);
+  void print_topic_dist_idx(std::string topic_file_name, int index);
   void print_doc_dist(int index);
   void load_topic_dist(std::string topic_file_name);
 

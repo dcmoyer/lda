@@ -17,7 +17,6 @@ void LDA::initialize(){
     }
     (*total_words_in_topics)(i,0) = 0;
   }
-
   for(int i=0; i < filenames.size(); ++i){
     
     Document target(filenames[i]);
@@ -102,7 +101,7 @@ void LDA::run_iterations(int num_iterations){
         
         while(prob > 0){
           new_topic += 1;
-          prob -= topic_dist(topic_idx,0);
+          prob -= topic_dist(new_topic,0);
         }
         assert(new_topic < K);
 
@@ -120,8 +119,23 @@ void LDA::run_iterations(int num_iterations){
     }
   }
 }
-//void LDA::print_topic_dist(std::string topic_file_name);
-//void LDA::print_doc_dist(std::string doc_dist_file_name, int index);
+void LDA::print_topic_dist(std::string topic_file_name) {
+  std::ofstream s(topic_file_name.c_str(), std::ofstream::out);
+  for(int i=0; i < K; ++i){
+    for(int j=0; j < V; ++j){
+        s << (*topic_x_words)(i,j) << ",";
+    }
+    s << "\n";
+  } 
+  s.close();
+}
+void LDA::print_topic_dist_idx(std::string doc_dist_file_name, int index) { 
+  std::stringstream ss;
+  ss << doc_dist_file_name << "_" << index << ".csv";
+  print_topic_dist(ss.str());
+}
+
+//void LDA::print_doc_dist(int index);
 //void LDA::load_topic_dist(std::string topic_file_name);
 
 
