@@ -26,6 +26,7 @@ for i in range(options.num_files):
     options.prefix + str(i) + ".txt","w")
   for line in f:
     for word in line.split():
+      word = word.strip(',.').lower()
       try:
         dict_of_words[word]
       except:
@@ -37,6 +38,6 @@ for i in range(options.num_files):
 
 g = open(options.path + options.prefix + "_proc/vocab.txt",'w')
 for key in dict_of_words.keys():
-  g.write(str(dict_of_words[key]) + "key\n")
+  g.write(str(dict_of_words[key]) + " " + key + "\n")
 g.close()
 
