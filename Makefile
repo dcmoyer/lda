@@ -19,7 +19,8 @@ sampler: document lda ldaDriver
 	g++ $(BOOST) -o $@ $(OBJS)
 
 clean:
+	rm sampler
+	rm *.csv
 	rm *.o
-	rm *.exe
 
 
