@@ -8,7 +8,7 @@ void Document::load_document(){
   words.clear();
   std::ifstream s((path_to_document).c_str(), std::ifstream::in);
   int temp;
-  
+
   while(!s.eof()){
     s >> temp;
     words.push_back(temp);
@@ -35,7 +35,10 @@ void Document::save_topics(){
   int len = topic_assignments.size();
 
   for(int i = 0; i < len; ++i){
-    s << " " << topic_assignments[i];
+    if(i > 0){
+      s << std::endl;
+    }
+    s << topic_assignments[i];
   }
 }
 

@@ -25,6 +25,7 @@ public:
     for(int i = 0; i < list_of_filenames.size(); ++i){
       filenames.push_back(list_of_filenames[i]);
     }
+
     vocab_path = _path;
     K = _K;
     alpha = _alpha;
@@ -34,15 +35,19 @@ public:
 
     int word;
     std::string true_word;
+    char c;
     std::ifstream s((vocab_path).c_str(), std::ifstream::in);
     V = 0;
 
     while(!s.eof()){
       s >> word >> true_word;
+      s.get(c);
       V++;
     }
+    std::cout << "all but mats\n";
     topic_x_words = new boost::numeric::ublas::matrix<int>(K,V);
     total_words_in_topics = new boost::numeric::ublas::matrix<int>(K,1);
+    std::cout << "mats\n";
   }
 
   ~LDA(){

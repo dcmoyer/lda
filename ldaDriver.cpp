@@ -1,35 +1,66 @@
-#include "document.hpp"
+
 #include "lda.hpp"
+#include "include.hpp"
 
-int main (int argc, char* argv[])
-{
-  if (argc < 10)
-  {
-    std::cout << "usage -> ./sampler location_prefix vocab_path numTopics numDocuments alphaParam betaParam burninVal thinningVal numIterations" << std::endl;
-    exit(-1);
+int main(int argc, char* argv[]){
+  
+  std::string prefix, path_prefix,vocab_path; 
+  int flag;
+  std::vector<std::string> filenames;
+  int K, N;
+  std::stringstream ss;
+
+  //cmd args
+  if(argc != 4){
+    std::cout << "<filename>:" + std::string(argv[0])
+       + ": ERROR wrong number of args";
+    return 1;
   }
-  std::string file_prefix(argv[1]);
-  std::string vocab_path(argv[2]);
-  int numTopics = atoi(argv[3]);
-  int numDocuments = atoi(argv[4]);
-  double alpha = atof(argv[5]);
-  double beta = atof(argv[6]);
-  int burnin = atoi(argv[7]);
-  int thinning = atoi(argv[8]);
-  int numIters = atoi(argv[9]);
+ 
+  prefix = argv[1];
+  vocab_path ="data/" + prefix + "/" + prefix + "_proc/vocab.txt" ;
+  path_prefix = "data/" + prefix + "/" + prefix + "_proc/" + prefix;
 
-  std::vector<std::string> list_of_filenames = std::vector<std::string> ();
-  for (int i = 0; i < numDocuments; ++i)
-  {
-    std::stringstream ss;
-    ss << file_prefix << i << ".txt";
-    list_of_filenames.push_back(ss.str());
+  std::istringstream iss(argv[2]);
+  if(iss >> K){
+    std::cout << K << " blocks" << std::endl;
+  } else {
+    std::cout << "ERROR IN READ";
+    return 1;
+  }
+  
+  std::istringstream issN(argv[3]);
+  if(issN >> N){
+    std::cout << K << " files" << std::endl;
+  } else {
+    std::cout << "ERROR IN READ";
+    return 1;
   }
 
-  LDA lda = LDA(list_of_filenames, vocab_path, numTopics, alpha, beta, burnin, thinning);
+  std::clock_t start;
+ 
+  for(int i=0; i < N; ++i){
+
+    ss << i;
+    std::string s = ss.str();
+    if(flag == 0){
+      filenames.push_back(path_prefix + s + ".txt");
+    }
+    std::cout << path_prefix + s + ".txt" << std::endl;
+    ss.str("");
+  }
+  
+  LDA lda(filenames,
+                vocab_path,
+                K,
+                1,//alpha,
+                1,//beta,
+                20,//burnin,
+                20//thinning
+              );
   lda.initialize();
-#if 1  
-  for (int j = 0; j < list_of_filenames.size(); ++j)
+#if 0
+  /*for (int j = 0; j < list_of_filenames.size(); ++j)
     std::cout << list_of_filenames[j] << std::endl;
 
   std::cout << "vocab_path = " << vocab_path << std::endl;
@@ -39,10 +70,16 @@ int main (int argc, char* argv[])
   std::cout << "burnin = " << burnin << std::endl;
   std::cout << "thinning = " << thinning << std::endl;
   std::cout << "numIters = " << numIters << std::endl;
-  lda.print_topic_dist_idx("testoutput", 0);
+  lda.print_topic_dist_idx("testoutput", 0);*/
 #else
-  lda.run_iterations(numIters);
-#endif 
+  start = std::clock();
+  lda.run_iterations(100);
+#endif
 
-  return 0;
+  std::cout << "Runtime: " << ((double) std::clock() - start) / (double)CLOCKS_PER_SEC
+     << std::endl;
+
+  lda.print_topic_dist_idx("testoutput",0);
 }
+
+

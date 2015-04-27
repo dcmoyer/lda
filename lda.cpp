@@ -10,6 +10,7 @@ double unif(){
 
 void LDA::initialize(){
 
+  Document target;
   //zero the matrix
   for(int i=0; i < K; ++i){
     for(int j=0; j < V; ++j){
@@ -17,12 +18,14 @@ void LDA::initialize(){
     }
     (*total_words_in_topics)(i,0) = 0;
   }
+  std::cout << "init matrices\n";
   for(int i=0; i < filenames.size(); ++i){
     
-    Document target(filenames[i]);
+    target = Document(filenames[i]);
     target.load_document();
     target.init_random_topics(K);
-    
+    target.save_topics();
+
     int size_of_doc = target.num_words();
     int word;
     int topic;
@@ -32,6 +35,7 @@ void LDA::initialize(){
       (*topic_x_words)(topic,word) += 1;
       (*total_words_in_topics)(topic,0) += 1;
     }
+    target.clear();
   }
 
 }
@@ -39,12 +43,15 @@ void LDA::initialize(){
 
 void LDA::run_iterations(int num_iterations){
   
-  for(int iter_idx=0; iter_idx < num_iterations; ++iter_idx){
+  Document target;
 
+  for(int iter_idx=0; iter_idx < num_iterations; ++iter_idx){
+    
+    std::cout << "Iteration " << iter_idx << std::endl;
     //Big loop of iteration over files
     for(int file_idx=0; file_idx < filenames.size(); ++file_idx){
       
-      Document target(filenames[file_idx]);
+      target = Document(filenames[file_idx]);
       target.load_document();
       target.load_topics();
 
@@ -105,11 +112,16 @@ void LDA::run_iterations(int num_iterations){
         }
         assert(new_topic < K);
 
+        //assign_topic
+        target.set_word_topic(word_idx,new_topic);
+
         //update dists
         (*topic_x_words)(new_topic,word) += 1;
         (*total_words_in_topics)(new_topic,0) += 1;
         document_x_topic(0,topic) += 1;
       }
+      target.save_topics();
+
     }
     if(iter_idx % thinning == 0){
       if(iter_idx < burnin){
