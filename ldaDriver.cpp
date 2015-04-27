@@ -5,7 +5,6 @@
 int main(int argc, char* argv[]){
   
   std::string prefix, path_prefix,vocab_path; 
-  int flag;
   std::vector<std::string> filenames;
   int K, N;
   std::stringstream ss;
@@ -43,9 +42,7 @@ int main(int argc, char* argv[]){
 
     ss << i;
     std::string s = ss.str();
-    if(flag == 0){
-      filenames.push_back(path_prefix + s + ".txt");
-    }
+    filenames.push_back(path_prefix + s + ".txt");
     std::cout << path_prefix + s + ".txt" << std::endl;
     ss.str("");
   }
