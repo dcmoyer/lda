@@ -13,3 +13,4 @@
 *.a
 
 data/*/*_proc/*
+sampler

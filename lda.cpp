@@ -49,6 +49,7 @@ void LDA::run_iterations(int num_iterations){
     
     std::cout << "Iteration " << iter_idx << std::endl;
     //Big loop of iteration over files
+    //TODO: MPI Goes Here
     for(int file_idx=0; file_idx < filenames.size(); ++file_idx){
       
       target = Document(filenames[file_idx]);
@@ -74,6 +75,7 @@ void LDA::run_iterations(int num_iterations){
 
       //actual gibbs sampling
       //this is where OpenMP would be nice.
+      //TODO: OpenMP atomic or barrier/syncs
       for(int word_idx=0; word_idx < size_of_doc; ++word_idx){
         //getword
         int word = target.get_word(word_idx);

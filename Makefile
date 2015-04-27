@@ -6,6 +6,9 @@ default: sampler
 fifa_corpus:
 	python make_clean_corpus.py -p data/fifa/ -f fifa -n 60
 
+test_corpus:
+	python make_clean_corpus.py -p data/test/ -f test -n 30
+
 document: document.cpp
 	g++ $(BOOST) -c -o document.o document.cpp
 
