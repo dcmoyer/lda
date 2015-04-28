@@ -2,6 +2,22 @@
 #include "lda.hpp"
 #include "include.hpp"
 
+// taken from earlier HWs
+double read_timer()
+{
+  static bool initialized = false;
+  static struct timeval start;
+  struct timeval end;
+  if( !initialized ) {
+    gettimeofday( &start, NULL );
+    initialized = true;
+  }
+  
+  gettimeofday( &end, NULL );
+  
+  return (end.tv_sec - start.tv_sec) + 1.0e-6 * (end.tv_usec - start.tv_usec);
+}
+
 int main(int argc, char* argv[]){
   
   std::string prefix, path_prefix,vocab_path; 
@@ -36,7 +52,7 @@ int main(int argc, char* argv[]){
     return 1;
   }
 
-  std::clock_t start;
+  //std::clock_t start;
  
   for(int i=0; i < N; ++i){
 
@@ -69,12 +85,13 @@ int main(int argc, char* argv[]){
   std::cout << "numIters = " << numIters << std::endl;
   lda.print_topic_dist_idx("testoutput", 0);*/
 #else
-  start = std::clock();
+  //start = std::clock();
+  double start = read_timer();
   lda.run_iterations(100);
+  double end = read_timer();
 #endif
 
-  std::cout << "Runtime: " << ((double) std::clock() - start) / (double)CLOCKS_PER_SEC
-     << std::endl;
+  std::cout << "Runtime: " << (end - start) << std::endl;
 
   lda.print_topic_dist_idx("testoutput",0);
 }
