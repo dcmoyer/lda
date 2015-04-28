@@ -9,6 +9,9 @@ fifa_corpus:
 test_corpus:
 	python make_clean_corpus.py -p data/test/ -f test -n 30
 
+test_output:
+	python test_output_dist.py -f testoutput_0.csv
+
 document: document.cpp
 	g++ $(BOOST) -c -o document.o document.cpp
 
@@ -22,7 +25,8 @@ sampler: document lda ldaDriver
 	g++ $(BOOST) -o $@ $(OBJS)
 
 clean:
+	rm sampler
+	rm *.csv
 	rm *.o
-	rm *.exe
 
 
