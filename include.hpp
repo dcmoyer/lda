@@ -11,6 +11,7 @@
 #include <cassert>
 #include <sys/time.h>
 
+#include <omp.h>
 #include<boost/numeric/ublas/io.hpp>
 #include<boost/numeric/ublas/matrix.hpp>
 

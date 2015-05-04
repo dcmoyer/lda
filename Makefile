@@ -1,5 +1,6 @@
 OBJS = document.o lda.o ldaDriver.o
 BOOST = -I ~/boost/boost_1_57_0
+OMP = -fopenmp
 
 default: sampler
 
@@ -13,16 +14,16 @@ test_output:
 	python test_output_dist.py -f testoutput_0.csv
 
 document: document.cpp
-	g++ $(BOOST) -c -o document.o document.cpp
+	g++ $(BOOST) $(OMP) -c -o document.o document.cpp
 
 lda: lda.cpp
-	g++ $(BOOST) -c -o lda.o lda.cpp
+	g++ $(BOOST) $(OMP) -c -o lda.o lda.cpp
 
 ldaDriver: ldaDriver.cpp
-	g++ $(BOOST)  -c -o ldaDriver.o ldaDriver.cpp
+	g++ $(BOOST) $(OMP) -c -o ldaDriver.o ldaDriver.cpp
 
 sampler: document lda ldaDriver
-	g++ $(BOOST) -o $@ $(OBJS)
+	g++ $(BOOST) $(OMP) -o $@ $(OBJS)
 
 clean:
 	rm sampler

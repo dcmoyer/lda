@@ -7,6 +7,9 @@ double unif(){
   return (double) std::rand()/(double) RAND_MAX;
 }
 
+// initialize the static member variables
+boost::numeric::ublas::matrix<int>* LDA::topic_x_words = NULL;
+boost::numeric::ublas::matrix<int>* LDA::total_words_in_topics = NULL;
 
 void LDA::initialize(){
 
@@ -76,14 +79,25 @@ void LDA::run_iterations(int num_iterations){
       //actual gibbs sampling
       //this is where OpenMP would be nice.
       //TODO: OpenMP atomic or barrier/syncs
-      for(int word_idx=0; word_idx < size_of_doc; ++word_idx){
+    int word_idx = 0;
+#if 1 //change it to 0 to disable OMP
+    int threadCount = 4;
+    omp_set_num_threads(threadCount);
+    #pragma omp parallel shared(target, document_x_topic, size_of_doc) private(word_idx)
+#endif 
+    {
+#if 1 //change it to 0 to disable OMP
+      #pragma omp for
+#endif 
+      for(word_idx=0; word_idx < size_of_doc; ++word_idx){
         //getword
         int word = target.get_word(word_idx);
         //gettopic
         int topic = target.get_word_topic(word_idx);
 
         //update dists.
-        assert((*topic_x_words)(topic,word) > 0);
+        //comment out the following since with OMP, topic_x_words could be poisoned a little bit and go below 1
+        //assert((*topic_x_words)(topic,word) > 0);
         (*topic_x_words)(topic,word) -= 1;
         (*total_words_in_topics)(topic,0) -= 1;
         assert(document_x_topic(0,topic) > 0);
@@ -123,6 +137,7 @@ void LDA::run_iterations(int num_iterations){
         document_x_topic(0,topic) += 1;
       }
       target.save_topics();
+    } //omp parallel
 
     }
     if(iter_idx % thinning == 0){
