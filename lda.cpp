@@ -79,13 +79,13 @@ void LDA::run_iterations(int num_iterations){
       //this is where OpenMP would be nice.
       //TODO: OpenMP atomic or barrier/syncs
     int word_idx = 0;
-#if 1 //change it to 0 to disable OMP
+#if OMP 
     int threadCount = 4;
     omp_set_num_threads(threadCount);
     #pragma omp parallel shared(target, document_x_topic, size_of_doc) private(word_idx)
 #endif 
     {
-#if 1 //change it to 0 to disable OMP
+#if OMP
       #pragma omp for
 #endif 
       for(word_idx=0; word_idx < size_of_doc; ++word_idx){
