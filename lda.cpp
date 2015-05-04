@@ -7,8 +7,8 @@ double unif(){
 }
 
 // initialize the static member variables
-boost::numeric::ublas::matrix<int>* LDA::topic_x_words = NULL;
-boost::numeric::ublas::matrix<int>* LDA::total_words_in_topics = NULL;
+//boost::numeric::ublas::matrix<int>* LDA::topic_x_words = NULL;
+//boost::numeric::ublas::matrix<int>* LDA::total_words_in_topics = NULL;
 
 void LDA::initialize(){
 
