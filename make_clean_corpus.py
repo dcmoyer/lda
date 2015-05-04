@@ -5,7 +5,7 @@ parser = OP()
 parser.add_option("-p","--path", dest="path", help="path to directory")
 parser.add_option("-n","--num-files",dest="num_files", help="number of files", type="int") 
 parser.add_option("-f","--file-prefix",dest="prefix", help="prefix of dirs/files")
-parser.add_option("-h","--holdout", dest="holdout",help="number of files to use as a holdout")
+parser.add_option("-k","--holdout", dest="holdout",help="number of files to use as a holdout")
 
 ##
 ## Parse
@@ -26,7 +26,9 @@ STOP_WORDS = ('the', 'a', 'an', 'i', 'we', 'they', 'you', 'he', 'she', 'it', \
               'out', 'is', 'am', 'are', 'was', 'were', 'that', 'this', 'these', \
               'those', 'by', 'on', 'with', 'as', 'not', 'over', 'at', 'have', \
               'has', 'had', 'been', 'then', 'when', 'what', 'who', 'do', 'did', \
-              'do', 'did', 'him')
+              'do', 'did', 'him', 'be', 'or', 'no', 'not', 'being', 'also', 'too', \
+              'some','which', 'so', 'more', 'most', 'though', 'although', 'either', \
+              'neither')
 
 for i in range(options.num_files):
   f = open(options.path + options.prefix + "_raw/" +
