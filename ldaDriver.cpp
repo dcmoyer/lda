@@ -65,7 +65,7 @@ int main(int argc, char* argv[]){
   }
   
   LDA lda(filenames,
-                prefix;
+                prefix,
                 vocab_path,
                 K,
                 1,//alpha,
