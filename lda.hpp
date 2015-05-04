@@ -9,6 +9,7 @@ class LDA{
 private:
   std::vector<std::string> filenames;
   std::string vocab_path;
+  std::string prefix;
   int K;
   int V;
   int burnin;
@@ -21,12 +22,14 @@ public:
   static boost::numeric::ublas::matrix<int>* topic_x_words;
   static boost::numeric::ublas::matrix<int>* total_words_in_topics;
   LDA();
-  LDA(std::vector<std::string>& list_of_filenames, std::string _path, int _K,
+  LDA(std::vector<std::string>& list_of_filenames, std::string _prefix,
+    std::string _path, int _K,
     double _alpha, double _beta, int _burnin, int _thinning){
     for(int i = 0; i < list_of_filenames.size(); ++i){
       filenames.push_back(list_of_filenames[i]);
     }
 
+    prefix = _prefix;
     vocab_path = _path;
     K = _K;
     alpha = _alpha;
