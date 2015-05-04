@@ -9,24 +9,32 @@ class LDA{
 private:
   std::vector<std::string> filenames;
   std::string vocab_path;
+  std::string prefix;
   int K;
   int V;
   int burnin;
   int thinning;
   double alpha;
   double beta;
+  boost::numeric::ublas::matrix<int>* topic_x_words;
+  boost::numeric::ublas::matrix<int>* total_words_in_topics;
 
 public:
   // have to make them public and static since OMP does not allow class member to be shared among threads 
-  static boost::numeric::ublas::matrix<int>* topic_x_words;
-  static boost::numeric::ublas::matrix<int>* total_words_in_topics;
+  // looks like OMP will make variables to be shared by default if not specified explicitly
+  // so we may not need the following to be static
+  // leave it here in case we need to re-enable them 
+  //static boost::numeric::ublas::matrix<int>* topic_x_words;
+  //static boost::numeric::ublas::matrix<int>* total_words_in_topics;
   LDA();
-  LDA(std::vector<std::string>& list_of_filenames, std::string _path, int _K,
+  LDA(std::vector<std::string>& list_of_filenames, std::string _prefix,
+    std::string _path, int _K,
     double _alpha, double _beta, int _burnin, int _thinning){
     for(int i = 0; i < list_of_filenames.size(); ++i){
       filenames.push_back(list_of_filenames[i]);
     }
 
+    prefix = _prefix;
     vocab_path = _path;
     K = _K;
     alpha = _alpha;
