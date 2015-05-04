@@ -2,7 +2,9 @@
 from optparse import OptionParser as OP
 
 parser = OP()
-parser.add_option("-f","--filename",dest="filename", help="filename")
+#parser.add_option("-f","--filename",dest="filename", help="filename")
+parser.add_option("-f","--file-prefix",dest="prefix", help="prefix of dirs/files")
+parser.add_option("-p","--path", dest="path", help="path to directory")
 
 ##
 ## Parse
@@ -15,13 +17,13 @@ parser.add_option("-f","--filename",dest="filename", help="filename")
 ##
 
 vocab = {}
-v = open('data/fifa/fifa_proc/vocab.txt', 'r')
+v = open(options.path + options.prefix + '_proc/vocab.txt', 'r')
 for line in v:
   line = line.strip().split()
   vocab[line[0]] = line[1]
 v.close()
 
-f = open(options.filename, 'r')
+f = open(options.path + options.prefix + '_proc/' + options.prefix + 'topic_dist_0.csv', 'r')
 topics = {}
 sorted_topics = {}
 i = 0
@@ -36,7 +38,7 @@ for line in f:
 
 f.close()
 
-g = open('hot_words_for_topics.csv', 'w')
+g = open(options.path + options.prefix + '_proc/hot_words_for_topics.csv', 'w')
 for key in sorted(topics.keys()):
   j = 0
   while j < 20:

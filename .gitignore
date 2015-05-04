@@ -6,6 +6,7 @@
 # Compiled Dynamic libraries
 *.so
 *.dylib
+*.pyc
 
 # Compiled Static libraries
 *.lai
@@ -14,3 +15,5 @@
 
 data/*/*_proc/*
 sampler
+testoutput_0.csv
+

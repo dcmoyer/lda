@@ -21,7 +21,7 @@ double read_timer()
 
 int main(int argc, char* argv[]){
   
-  std::string prefix, path_prefix,vocab_path; 
+  std::string prefix, path_prefix,vocab_path, output_path; 
   std::vector<std::string> filenames;
   int K, N;
   std::stringstream ss;
@@ -69,8 +69,8 @@ int main(int argc, char* argv[]){
                 K,
                 1,//alpha,
                 1,//beta,
-                20,//burnin,
-                20//thinning
+                2,//burnin
+                1//thinning
               );
   lda.initialize();
 #if 0
@@ -94,7 +94,7 @@ int main(int argc, char* argv[]){
 
   std::cout << "Runtime: " << (end - start) << std::endl;
 
-  lda.print_topic_dist_idx("testoutput",0);
+  lda.print_topic_dist_idx(path_prefix + "topic_dist",0);
 }
 
 

@@ -63,7 +63,7 @@ public:
   void print_topic_dist_idx(std::string topic_file_name, int index);
   void print_doc_dist(int index);
   void load_topic_dist(std::string topic_file_name);
-
+  void print_neg_log_likelihood(std::string file_name);
 };
 
 #endif
