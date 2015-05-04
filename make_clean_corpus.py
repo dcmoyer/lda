@@ -5,6 +5,7 @@ parser = OP()
 parser.add_option("-p","--path", dest="path", help="path to directory")
 parser.add_option("-n","--num-files",dest="num_files", help="number of files", type="int") 
 parser.add_option("-f","--file-prefix",dest="prefix", help="prefix of dirs/files")
+parser.add_option("-h","--holdout", dest="holdout",help="number of files to use as a holdout")
 
 ##
 ## Parse
