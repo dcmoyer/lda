@@ -1,4 +1,3 @@
-
 #include "lda.hpp"
 
 //Utility function
