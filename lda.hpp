@@ -16,8 +16,13 @@ private:
   int thinning;
   double alpha;
   double beta;
+#if MPI_ENABLED
+  std::vector<int> topic_x_words;
+  std::vector<int> total_words_in_topics;
+#else
   boost::numeric::ublas::matrix<int>* topic_x_words;
   boost::numeric::ublas::matrix<int>* total_words_in_topics;
+#endif
 
 public:
   // have to make them public and static since OMP does not allow class member to be shared among threads 
@@ -54,15 +59,38 @@ public:
       V++;
     }
     std::cout << "all but mats\n";
+#if MPI_ENABLED
+    topic_x_words = std::vector<int> (K*V);
+    total_words_in_topics = std::vector<int> (K);
+#else
     topic_x_words = new boost::numeric::ublas::matrix<int>(K,V);
     total_words_in_topics = new boost::numeric::ublas::matrix<int>(K,1);
+#endif
     std::cout << "mats\n";
   }
 
   ~LDA(){
+#if MPI_ENABLED
+    ;
+#else
     delete topic_x_words;
     delete total_words_in_topics;
+#endif
   }
+
+#if MPI_ENABLED
+  inline int& _topic_x_words(int r, int c)
+  {
+     size_t index = V * r + c;
+     return topic_x_words[index];
+  }
+
+  inline int& _total_words_in_topics(int r, int c)
+  {
+     size_t index = 1 * r + c;
+     return total_words_in_topics[index];
+  }
+#endif
 
   void initialize();
   void run_iterations(int num_iterations);
