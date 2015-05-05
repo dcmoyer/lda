@@ -2,6 +2,7 @@ OBJS = document.o lda.o ldaDriver.o
 BOOST = -I ~/boost/boost_1_57_0
 OMP = -fopenmp
 GPP = g++
+CXX = mpicxx
 
 default: sampler
 
@@ -18,16 +19,16 @@ test_output_test:
 	python test_output_dist.py -p data/test/ -f test
 
 document: document.cpp
-	$(GPP) $(BOOST) $(OMP) -c -o document.o document.cpp
+	$(CXX) $(BOOST) $(OMP) -c -o document.o document.cpp
 
 lda: lda.cpp
-	$(GPP) $(BOOST) $(OMP) -c -o lda.o lda.cpp
+	$(CXX) $(BOOST) $(OMP) -c -o lda.o lda.cpp
 
 ldaDriver: ldaDriver.cpp
-	$(GPP) $(BOOST) $(OMP) -c -o ldaDriver.o ldaDriver.cpp
+	$(CXX) $(BOOST) $(OMP) -c -o ldaDriver.o ldaDriver.cpp
 
 sampler: document lda ldaDriver
-	$(GPP) $(BOOST) $(OMP) -o $@ $(OBJS)
+	$(CXX) $(BOOST) $(OMP) -o $@ $(OBJS)
 
 clean:
 	rm sampler

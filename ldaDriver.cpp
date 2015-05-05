@@ -26,6 +26,12 @@ int main(int argc, char* argv[]){
   int K, N;
   std::stringstream ss;
 
+#ifdef MPI_ENABLED
+  MPI_Init(&argc, &argv);
+  int rank = 0;
+  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+#endif
+
   //cmd args
   if(argc != 4){
     std::cout << "<filename>:" + std::string(argv[0])
@@ -93,9 +99,17 @@ int main(int argc, char* argv[]){
   double end = read_timer();
 #endif
 
-  std::cout << "Runtime: " << (end - start) << std::endl;
+#ifdef MPI_ENABLED
+  if (rank == 0) {
+    std::cout << "Runtime: " << (end - start) << std::endl;
+    lda.print_topic_dist_idx(path_prefix + "topic_dist",0);
+  }
 
-  lda.print_topic_dist_idx(path_prefix + "topic_dist",0);
+  MPI_Finalize();
+#else
+    std::cout << "Runtime: " << (end - start) << std::endl;
+    lda.print_topic_dist_idx(path_prefix + "topic_dist",0);
+#endif
 }
 
 

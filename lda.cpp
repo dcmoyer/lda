@@ -13,6 +13,7 @@ double unif(){
 void LDA::initialize(){
 
   Document target;
+/*
   //zero the matrix
   for(int i=0; i < K; ++i){
     for(int j=0; j < V; ++j){
@@ -20,6 +21,7 @@ void LDA::initialize(){
     }
     (*total_words_in_topics)(i,0) = 0;
   }
+*/
   std::cout << "init matrices\n";
   for(int i=0; i < filenames.size(); ++i){
     
@@ -46,13 +48,23 @@ void LDA::initialize(){
 
 }
 
-void LDA::update_tables(Document target)    {
-    int size_of_doc = target.num_words();
+void LDA::initialize_tables()   {
+  //zero the matrix
+  for(int i=0; i < K; ++i){
+    for(int j=0; j < V; ++j){
+      (*topic_x_words)(i,j) = 0;
+    }
+    (*total_words_in_topics)(i,0) = 0;
+  }
+}
+
+void LDA::update_tables(Document doc_file)    {
+    int size_of_doc = doc_file.num_words();
     int word;
     int topic;
     for(int j=0; j < size_of_doc; ++j){
-      word = target.get_word(j);
-      topic = target.get_word_topic(j);
+      word = doc_file.get_word(j);
+      topic = doc_file.get_word_topic(j);
       (*topic_x_words)(topic,word) += 1;
       (*total_words_in_topics)(topic,0) += 1;
     }
@@ -63,12 +75,37 @@ void LDA::run_iterations(int num_iterations){
   Document target;
 
   for(int iter_idx=0; iter_idx < num_iterations; ++iter_idx){
-    
+
+    int first_file_idx, last_file_idx;
+
+#ifdef MPI_ENABLED
+
+    int rank, namelen, numProcs;
+    char processor_name[MPI_MAX_PROCESSOR_NAME];
+
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+    MPI_Comm_size(MPI_COMM_WORLD, &numProcs);
+    MPI_Get_processor_name(processor_name, &namelen);
+
+    if (rank == 0)    {
+      std::cout << "Iteration " << iter_idx << std::endl;   
+    }
+    num_files_per_proc = ceil((float)filenames.size / num_procs);
+    first_file_idx = rank * num_files_per_proc;
+    last_file_idx = first_file_idx + num_files_per_proc - 1;
+
+#else
+
     std::cout << "Iteration " << iter_idx << std::endl;
+    first_file_idx = 0; last_file_idx = filenames.size();
+
+#endif 
+
     //Big loop of iteration over files
     //TODO: MPI Goes Here
-    for(int file_idx=0; file_idx < filenames.size(); ++file_idx){
-      
+
+    for(int file_idx=first_file_idx; file_idx < last_file_idx; ++file_idx){
+            
       target = Document(filenames[file_idx]);
       target.load_document();
       target.load_topics();
@@ -154,6 +191,31 @@ void LDA::run_iterations(int num_iterations){
     } //omp parallel
 
     }
+
+#ifdef MPI_ENABLED
+    if (rank == 0)  {
+      if (iter_idx % sync_frequency == 0)  {
+        // recount the tables from current topic assignments
+        initialize_tables();
+
+        for (i = 0; i<filenames.size(); i++)    {
+            Document tmp_doc = Document(filenames[i]);
+            update_tables(tmp_doc);
+        }
+
+        // send tables to all processes in the pool
+
+      }
+
+      if(iter_idx % thinning == 0){
+        if(iter_idx < burnin){
+          continue;
+        }
+        print_neg_log_likelihood(vocab_path.substr(0, vocab_path.length()-9) + "neg_log_like.csv");
+        //TODO: PRINT
+      }
+    }
+#else
     if(iter_idx % thinning == 0){
       if(iter_idx < burnin){
         continue;
@@ -161,7 +223,8 @@ void LDA::run_iterations(int num_iterations){
       print_neg_log_likelihood(vocab_path.substr(0, vocab_path.length()-9) + "neg_log_like.csv");
       //TODO: PRINT
     }
-  }
+#endif
+  } // outer for loop
 }
 void LDA::print_topic_dist(std::string topic_file_name) {
   std::ofstream s(topic_file_name.c_str(), std::ofstream::out);

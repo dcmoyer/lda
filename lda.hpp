@@ -5,6 +5,8 @@
 #include "include.hpp"
 #include "document.hpp"
 
+#include <mpi.h>
+
 class LDA{
 private:
   std::vector<std::string> filenames;
@@ -66,7 +68,9 @@ public:
 
   void initialize();
   void run_iterations(int num_iterations);
+  void initialize_tables();
   void update_tables(Document target);
+
   void print_topic_dist(std::string topic_file_name);
   void print_topic_dist_idx(std::string topic_file_name, int index);
   void print_doc_dist(int index);
