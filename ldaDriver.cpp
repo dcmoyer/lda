@@ -25,10 +25,10 @@ int main(int argc, char* argv[]){
   std::vector<std::string> filenames;
   int K, N;
   std::stringstream ss;
+  int rank = 0;
 
 #if MPI_ENABLED
   MPI_Init(&argc, &argv);
-  int rank = 0;
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
   MPI_Errhandler_set(MPI_COMM_WORLD, MPI_ERRORS_RETURN);
 #endif
@@ -101,7 +101,7 @@ int main(int argc, char* argv[]){
   double end = read_timer();
 #endif
 
-#ifdef MPI_ENABLED
+#if MPI_ENABLED
   if (rank == 0) {
     std::cout << "Runtime: " << (end - start) << std::endl;
     lda.print_topic_dist_idx(path_prefix + "topic_dist",0);
