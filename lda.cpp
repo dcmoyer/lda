@@ -28,6 +28,9 @@ void LDA::initialize(){
     target.init_random_topics(K);
     target.save_topics();
 
+    update_tables(target);
+
+  /*
     int size_of_doc = target.num_words();
     int word;
     int topic;
@@ -37,11 +40,23 @@ void LDA::initialize(){
       (*topic_x_words)(topic,word) += 1;
       (*total_words_in_topics)(topic,0) += 1;
     }
+  */
     target.clear();
   }
 
 }
 
+void LDA::update_tables(Document target)    {
+    int size_of_doc = target.num_words();
+    int word;
+    int topic;
+    for(int j=0; j < size_of_doc; ++j){
+      word = target.get_word(j);
+      topic = target.get_word_topic(j);
+      (*topic_x_words)(topic,word) += 1;
+      (*total_words_in_topics)(topic,0) += 1;
+    }
+}
 
 void LDA::run_iterations(int num_iterations){
   
