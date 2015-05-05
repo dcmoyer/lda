@@ -1,0 +1,19 @@
+#!/bin/bash
+#PBS -l nodes=4:ppn=2:myri
+#PBS -l walltime=00:10:0
+#PBS -o lda.out
+#PBS -A lc_jnc
+#PBS -j oe
+#PBS -N cs503_lda
+
+WORK_HOME=/home/rcf-40/akramakr/CourseWork/cs503/Project/lda
+
+cd $WORK_HOME
+np=$(cat $PBS_NODEFILE | wc -l)
+
+fileType=fifa
+noTopics=10
+noFiles=60
+
+mpirun -np $np -machinefile $PBS_NODEFILE ./sampler $fileType $noTopics $noFiles
+
