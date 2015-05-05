@@ -41,12 +41,16 @@ f.close()
 g = open(options.path + options.prefix + '_proc/hot_words_for_topics.csv', 'w')
 for key in sorted(topics.keys()):
   j = 0
+  jj = 0
   while j < 20:
     wid = sorted_topics[key][j]
     indices = [i for i, x in enumerate(topics[key]) if x == wid]
     j += len(indices)
     for index in indices:
+      if jj >= 20:
+        break
       g.write(vocab[str(index)] + ',')
+      jj += 1
   g.write('\n')
 
 g.close()
