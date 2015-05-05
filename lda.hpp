@@ -21,6 +21,7 @@ private:
 #if MPI_ENABLED
   std::vector<int> topic_x_words;
   std::vector<int> total_words_in_topics;
+  int sync_frequency;
 #else
   boost::numeric::ublas::matrix<int>* topic_x_words;
   boost::numeric::ublas::matrix<int>* total_words_in_topics;
@@ -36,7 +37,7 @@ public:
   LDA();
   LDA(std::vector<std::string>& list_of_filenames, std::string _prefix,
     std::string _path, int _K,
-    double _alpha, double _beta, int _burnin, int _thinning){
+    double _alpha, double _beta, int _burnin, int _thinning, int _sync_frequency){
     for(int i = 0; i < list_of_filenames.size(); ++i){
       filenames.push_back(list_of_filenames[i]);
     }
@@ -48,6 +49,7 @@ public:
     beta = _beta;
     burnin = _burnin;
     thinning = _thinning;
+    sync_frequency = _sync_frequency;
 
     int word;
     std::string true_word;
@@ -98,6 +100,7 @@ public:
   void run_iterations(int num_iterations);
   void initialize_tables();
   void update_tables(Document target);
+  void broadcast_data(std::vector<int> data_vector, int size);
 
   void print_topic_dist(std::string topic_file_name);
   void print_topic_dist_idx(std::string topic_file_name, int index);

@@ -26,10 +26,11 @@ int main(int argc, char* argv[]){
   int K, N;
   std::stringstream ss;
 
-#ifdef MPI_ENABLED
+#if MPI_ENABLED
   MPI_Init(&argc, &argv);
   int rank = 0;
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+  MPI_Errhandler_set(MPI_COMM_WORLD, MPI_ERRORS_RETURN);
 #endif
 
   //cmd args
@@ -77,7 +78,8 @@ int main(int argc, char* argv[]){
                 1,//alpha,
                 1,//beta,
                 2,//burnin
-                1//thinning
+                1,//thinning
+                50//sync frequency
               );
   lda.initialize();
 #if 0
