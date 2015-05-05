@@ -200,16 +200,16 @@ void LDA::print_neg_log_likelihood(std::string file_name){
       //std::cout << temp_prob << std::endl;
       if(temp_prob == 0){
         std::cout << "WTF";
-        temp_prob = 0.001;
+        temp_prob = 0.000001;
       }
-      log_L += log2(temp_prob);
+      log_L += log2(temp_prob)/((double) filenames.size());
     }
 
   }
 
   //print it
   std::ofstream s(file_name.c_str(), std::ofstream::app);
-  s << log_L << std::endl;  
+  s << -log_L << std::endl;  
  
 }
 
