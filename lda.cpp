@@ -274,7 +274,7 @@ void LDA::run_iterations(int num_iterations){
       if(iter_idx < burnin){
         continue;
       }
-      //print_neg_log_likelihood(vocab_path.substr(0, vocab_path.length()-9) + "neg_log_like.csv");
+      print_neg_log_likelihood(vocab_path.substr(0, vocab_path.length()-9) + "neg_log_like.csv");
       //TODO: PRINT
     }
 #endif
