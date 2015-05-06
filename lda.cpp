@@ -71,6 +71,7 @@ void LDA::update_tables(Document doc_file)    {
     }
 }
 
+#if MPI_ENABLED
 void LDA::broadcast_data(std::vector<int> data_vector, int size) {
     int mpi_ret_status = MPI_Bcast(&data_vector[0], size, MPI_INT, 0, MPI_COMM_WORLD);
     int rank;
@@ -85,6 +86,7 @@ void LDA::broadcast_data(std::vector<int> data_vector, int size) {
         exit(0);
     }
 }
+#endif
 
 void LDA::run_iterations(int num_iterations){
   

@@ -12,6 +12,9 @@ fifa_corpus:
 test_corpus:
 	python make_clean_corpus.py -p data/test/ -f test -n 30
 
+wiki_corpus:
+	python make_clean_corpus.py -p data/wiki/ -f wiki -n 90
+
 test_output_fifa:
 	python test_output_dist.py -p data/fifa/ -f fifa
 

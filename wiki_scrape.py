@@ -1,5 +1,6 @@
 
 import sys, urllib2, re, string, time, threading, string
+import csv
 
 def remove_braces( target ):
   pos = 0
@@ -125,6 +126,7 @@ def get_wikipedia_article( article_title ):
       all = replace_links_with_text(all)
       all = re.sub(r'={2,}','',all)
       all = re.sub(r"'",'',all)
+      all = re.sub(r'\{\|(.*?)\|\}',"",all)
       #all = re.sub(r'\[\[.*?\|*([^\|]*?)\]\]', r'\1', all)
       #all = re.sub(r'\&lt;.*?&gt;', '', all)
       all = filter(lambda x: x in string.printable, all)
@@ -134,10 +136,20 @@ def get_wikipedia_article( article_title ):
         % article_title
       failed = True
       continue
-    print(all)
   return(all)
 
 if __name__ == "__main__":
   #print(remove_braces("{{hello}}, what is {up daw{{g}}} {{ asdf }} "))
-  get_wikipedia_article("Dog")
+  list_of_pages = []
+  f = open("data/wiki/pages.txt","rb")
+  reader = csv.reader(f)
+  for line in reader:
+    list_of_pages.append(line[0])
+  f.close()
+  for i,page in enumerate(list_of_pages):
+    text = get_wikipedia_article(page)
+    f = open("data/wiki/wiki_raw/wiki"+str(i)+".txt","w")
+    f.write(text)
+    f.close()
+  #get_wikipedia_article("Dog")
 

@@ -5,8 +5,9 @@
 #include "include.hpp"
 #include "document.hpp"
 
+#if MPI_ENABLED
 #include <mpi.h>
-
+#endif
 class LDA{
 private:
   std::vector<std::string> filenames;
@@ -18,10 +19,10 @@ private:
   int thinning;
   double alpha;
   double beta;
+  int sync_frequency;
 #if MPI_ENABLED
   std::vector<int> topic_x_words;
   std::vector<int> total_words_in_topics;
-  int sync_frequency;
 #else
   boost::numeric::ublas::matrix<int>* topic_x_words;
   boost::numeric::ublas::matrix<int>* total_words_in_topics;

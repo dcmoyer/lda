@@ -25,12 +25,12 @@ int main(int argc, char* argv[]){
   std::vector<std::string> filenames;
   int K, N;
   std::stringstream ss;
+  int rank = 0;
 
   int rank;
 
 #if MPI_ENABLED
   MPI_Init(&argc, &argv);
-  rank = 0;
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
   MPI_Errhandler_set(MPI_COMM_WORLD, MPI_ERRORS_RETURN);
 #endif
