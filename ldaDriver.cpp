@@ -88,7 +88,7 @@ int main(int argc, char* argv[]){
                 1,//beta,
                 2,//burnin
                 1,//thinning
-                5//sync frequency
+                1//sync frequency
               );
   lda.initialize();
 #if 0

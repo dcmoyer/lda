@@ -75,7 +75,7 @@ void LDA::update_tables(Document doc_file)    {
 void LDA::broadcast_data(std::vector<int> data_vector, int size) {
     int mpi_ret_status = MPI_Bcast(&data_vector[0], size, MPI_INT, 0, MPI_COMM_WORLD);
     int rank;
-
+    
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
     if (mpi_ret_status != MPI_SUCCESS)  {
@@ -99,14 +99,13 @@ void LDA::run_iterations(int num_iterations){
 
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &num_procs);
-    MPI_Get_processor_name(processor_name, &namelen);
 
     //sync nodes before broadcast
     //MPI_Barrier(MPI_COMM_WORLD);
 
     //distribute the initial tables to all nodes
-    broadcast_data(topic_x_words, K*V);
-    broadcast_data(total_words_in_topics, K);
+//    broadcast_data(topic_x_words, K*V);
+//    broadcast_data(total_words_in_topics, K);
 
     if (rank == 0)    {
       std::cout <<"[proc "<<rank<<"]" << "Tables sent to children" << std::endl;
@@ -127,9 +126,27 @@ void LDA::run_iterations(int num_iterations){
 
   for(int iter_idx=0; iter_idx < num_iterations; ++iter_idx){
 #if MPI_ENABLED
-    if (rank == 0)    { 
+    if (rank == 0)    {
       std::cout <<"[proc "<<rank<<"]" << "Iteration " << iter_idx << std::endl;
     }
+
+    if (iter_idx % sync_frequency == 0)  {
+      if (rank == 0)  {
+        // recount the tables from current topic assignments
+        initialize_tables();
+
+        for (int i = 0; i<filenames.size(); i++)    {
+            Document tmp_doc = Document(filenames[i]);
+            tmp_doc.load_document();
+            tmp_doc.load_topics();
+            update_tables(tmp_doc);
+        }
+      }
+    }
+
+    // send tables to all processes in the pool
+    broadcast_data(topic_x_words, K*V);
+    broadcast_data(total_words_in_topics, K);
 #else
     std::cout << "Iteration " << iter_idx << std::endl;
     first_file_idx = 0; last_file_idx = filenames.size();
@@ -139,6 +156,8 @@ void LDA::run_iterations(int num_iterations){
     //TODO: MPI Goes Here
 
     for(int file_idx=first_file_idx; file_idx < last_file_idx; ++file_idx){
+            
+      //std::cout << rank << "am I here " << first_file_idx << std::endl;   
       target = Document(filenames[file_idx]);
       target.load_document();
       target.load_topics();
@@ -197,7 +216,6 @@ void LDA::run_iterations(int num_iterations){
 #if MPI_ENABLED
           double topic_word_prob = ((double) _topic_x_words(topic_idx,word) + beta)/
             ((double)_total_words_in_topics(topic_idx,0) + V*beta);
-
 #else
           double topic_word_prob = ((double) (*topic_x_words)(topic_idx,word) + beta)/
             ((double)(*total_words_in_topics)(topic_idx,0) + V*beta);
@@ -244,22 +262,6 @@ void LDA::run_iterations(int num_iterations){
     }
 
 #if MPI_ENABLED
-    if (iter_idx % sync_frequency == 0)  {
-      if (rank == 0)  {
-        // recount the tables from current topic assignments
-        initialize_tables();
-
-        for (int i = 0; i<filenames.size(); i++)    {
-            Document tmp_doc = Document(filenames[i]);
-            update_tables(tmp_doc);
-        }
-      }
-
-        // send tables to all processes in the pool
-      broadcast_data(topic_x_words, K*V);
-      broadcast_data(total_words_in_topics, K);
-    }
-
     if (rank == 0) {
       if(iter_idx % thinning == 0){
         if(iter_idx < burnin){
