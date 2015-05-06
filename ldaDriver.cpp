@@ -27,8 +27,6 @@ int main(int argc, char* argv[]){
   std::stringstream ss;
   int rank = 0;
 
-  int rank;
-
 #if MPI_ENABLED
   MPI_Init(&argc, &argv);
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
@@ -90,7 +88,7 @@ int main(int argc, char* argv[]){
                 1,//beta,
                 2,//burnin
                 1,//thinning
-                50//sync frequency
+                5//sync frequency
               );
   lda.initialize();
 #if 0

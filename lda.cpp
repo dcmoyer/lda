@@ -117,7 +117,10 @@ void LDA::run_iterations(int num_iterations){
     last_file_idx = first_file_idx + num_files_per_proc - 1;
 
     if (rank == num_procs - 1)
-        last_file_idx = filenames.size();
+        last_file_idx = filenames.size() - 1;
+
+      std::cout <<"[proc "<<rank<<"]" << "My first index is "<<first_file_idx<<std::endl;
+      std::cout <<"[proc "<<rank<<"]" << "My last index is "<<last_file_idx<<std::endl;
 #else
     first_file_idx = 0; last_file_idx = filenames.size();
 #endif
@@ -136,7 +139,6 @@ void LDA::run_iterations(int num_iterations){
     //TODO: MPI Goes Here
 
     for(int file_idx=first_file_idx; file_idx < last_file_idx; ++file_idx){
-            
       target = Document(filenames[file_idx]);
       target.load_document();
       target.load_topics();
@@ -155,6 +157,7 @@ void LDA::run_iterations(int num_iterations){
       //fill distribution
       for(int word_idx=0; word_idx < size_of_doc; ++word_idx){
         int topic = target.get_word_topic(word_idx);
+        assert( topic>=0 && topic<=K );
         document_x_topic(0,topic) += 1;
       }
 
@@ -201,6 +204,8 @@ void LDA::run_iterations(int num_iterations){
 #endif
           double topic_doc_prob = ((double)(document_x_topic(0,topic_idx) + alpha)/
             ((double) size_of_doc + K*alpha/*CHECKTHIS*/));
+
+          assert (topic_idx>=0 && topic_idx<=K);
           topic_dist(topic_idx,0) = topic_word_prob * topic_doc_prob;
         }
 
@@ -269,7 +274,7 @@ void LDA::run_iterations(int num_iterations){
       if(iter_idx < burnin){
         continue;
       }
-      print_neg_log_likelihood(vocab_path.substr(0, vocab_path.length()-9) + "neg_log_like.csv");
+      //print_neg_log_likelihood(vocab_path.substr(0, vocab_path.length()-9) + "neg_log_like.csv");
       //TODO: PRINT
     }
 #endif
