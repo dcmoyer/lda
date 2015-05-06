@@ -22,6 +22,9 @@ test_output_fifa:
 test_output_test:
 	python test_output_dist.py -p data/test/ -f test
 
+test_output_wiki:
+	python test_output_dist.py -p data/wiki/ -f wiki
+
 document: document.cpp
 	$(CXX) $(BOOST) $(OMP) $(OPTIONS) -c -o document.o document.cpp
 

@@ -34,6 +34,9 @@ for line in f:
   for wid in line:
     topics[i].append(int(wid))
   sorted_topics[i] = sorted(topics[i], reverse=True)
+  print 'topic %d' % i
+  for k in range(5):
+    print sorted_topics[i][k]
   i += 1
 
 f.close()

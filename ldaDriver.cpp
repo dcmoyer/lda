@@ -90,7 +90,14 @@ int main(int argc, char* argv[]){
                 1,//thinning
                 1//sync frequency
               );
-  lda.initialize();
+  // only the master node should initialize using all files
+  // otherwise, it will cause race condition as all nodes
+  // are trying to read the same files and causing the app
+  // to crash
+  if (rank == 0)
+  {
+    lda.initialize();
+  }
 #if 0
   /*for (int j = 0; j < list_of_filenames.size(); ++j)
     std::cout << list_of_filenames[j] << std::endl;
