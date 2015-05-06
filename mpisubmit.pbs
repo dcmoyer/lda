@@ -1,6 +1,7 @@
 #!/bin/bash
-#PBS -l nodes=4:ppn=2:myri
-#PBS -l walltime=00:10:0
+#PBS -l nodes=3:ppn=6:myri
+#PBS -l walltime=00:30:0
+#PBS -l pmem=4g
 #PBS -o lda.out
 #PBS -A lc_jnc
 #PBS -j oe
@@ -15,5 +16,9 @@ fileType=fifa
 noTopics=10
 noFiles=60
 
-mpirun -np $np -machinefile $PBS_NODEFILE ./sampler $fileType $noTopics $noFiles
+source /usr/usc/mpich2/1.3.1..10/setup.sh
+#mpirun -verbose -genv I_MPI_DEBUG 5 -genv I_MPI_HYDRA_DEBUG 1  -np $np -machinefile $PBS_NODEFILE ./sampler $fileType $noTopics $noFiles
+mpirun -np 4 -machinefile $PBS_NODEFILE ./sampler $fileType $noTopics $noFiles
 
+
+#qsub -d . -l 'nodes=4:ppn=2:myri' -l 'walltime=00:20:0' -l 'pmem=4g' -A lc_jnc -j oe -N 'cs503_lda' -I

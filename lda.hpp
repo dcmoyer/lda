@@ -62,15 +62,15 @@ public:
       s.get(c);
       V++;
     }
-    std::cout << "all but mats\n";
 #if MPI_ENABLED
     topic_x_words = std::vector<int> (K*V);
     total_words_in_topics = std::vector<int> (K);
 #else
+    std::cout << "all but mats\n";
     topic_x_words = new boost::numeric::ublas::matrix<int>(K,V);
     total_words_in_topics = new boost::numeric::ublas::matrix<int>(K,1);
-#endif
     std::cout << "mats\n";
+#endif
   }
 
   ~LDA(){

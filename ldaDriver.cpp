@@ -26,9 +26,11 @@ int main(int argc, char* argv[]){
   int K, N;
   std::stringstream ss;
 
+  int rank;
+
 #if MPI_ENABLED
   MPI_Init(&argc, &argv);
-  int rank = 0;
+  rank = 0;
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
   MPI_Errhandler_set(MPI_COMM_WORLD, MPI_ERRORS_RETURN);
 #endif
@@ -46,7 +48,9 @@ int main(int argc, char* argv[]){
 
   std::istringstream iss(argv[2]);
   if(iss >> K){
+#ifndef MPI_ENABLED
     std::cout << K << " blocks" << std::endl;
+#endif
   } else {
     std::cout << "ERROR IN READ";
     return 1;
@@ -54,7 +58,9 @@ int main(int argc, char* argv[]){
   
   std::istringstream issN(argv[3]);
   if(issN >> N){
+#ifndef MPI_ENABLED
     std::cout << K << " files" << std::endl;
+#endif
   } else {
     std::cout << "ERROR IN READ";
     return 1;
@@ -67,7 +73,12 @@ int main(int argc, char* argv[]){
     ss << i;
     std::string s = ss.str();
     filenames.push_back(path_prefix + s + ".txt");
+#if MPI_ENABLED
+  if (rank == 0)  
     std::cout << path_prefix + s + ".txt" << std::endl;
+#else
+    std::cout << path_prefix + s + ".txt" << std::endl;
+#endif
     ss.str("");
   }
   
@@ -101,7 +112,7 @@ int main(int argc, char* argv[]){
   double end = read_timer();
 #endif
 
-#ifdef MPI_ENABLED
+#if MPI_ENABLED
   if (rank == 0) {
     std::cout << "Runtime: " << (end - start) << std::endl;
     lda.print_topic_dist_idx(path_prefix + "topic_dist",0);
