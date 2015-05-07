@@ -79,13 +79,13 @@ int main(int argc, char* argv[]){
   if (rank == 0)  
     std::cout << path_prefix + s + ".txt" << std::endl;
 #else
-    std::cout << path_prefix + s + ".txt" << std::endl;
+    //std::cout << path_prefix + s + ".txt" << std::endl;
 #endif
     ss.str("");
   }
  
 #if OMP_ENABLED
-  std::istringstream issT(argv[3]);
+  std::istringstream issT(argv[4]);
   issT >> num_threads;
 //  num_threads = atoi(argv[4]);
 
@@ -165,7 +165,8 @@ int main(int argc, char* argv[]){
 
   MPI_Finalize();
 #else
-    std::cout << "Runtime: " << (end - start) << std::endl;
+    std::cout << "For "<<num_threads<<" threads, the runtime is: " << (end - start)
+        << " on the "<<prefix<<" dataset"<< std::endl;
     lda.print_topic_dist_idx(path_prefix + "topic_dist",0);
 #endif
 }
