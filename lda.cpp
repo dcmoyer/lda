@@ -16,7 +16,7 @@ void LDA::initialize(){
 
   initialize_tables();
 
-  std::cout << "init matrices\n";
+//  std::cout << "init matrices\n";
   for(int i=0; i < filenames.size(); ++i){
     
     target = Document(filenames[i]);
@@ -36,9 +36,11 @@ void LDA::initialize_tables()   {
 #if MPI_ENABLED
   for(int i=0; i < K; ++i){
     for(int j=0; j < V; ++j){
-      _topic_x_words(i,j) = 0;
+     // _topic_x_words(i,j) = 0;
+     topic_x_words[V*i + j] = 0;
     }
-    _total_words_in_topics(i,0) = 0;
+    //_total_words_in_topics(i,0) = 0;
+    total_words_in_topics[i] = 0;
   }
 #else
   for(int i=0; i < K; ++i){
@@ -62,14 +64,208 @@ void LDA::update_tables(Document doc_file)    {
       word = doc_file.get_word(j);
       topic = doc_file.get_word_topic(j);
 #if MPI_ENABLED
-      _topic_x_words(topic,word) += 1;
-      _total_words_in_topics(topic,0) += 1;
+      //_topic_x_words(topic,word) += 1;
+      //_total_words_in_topics(topic,0) += 1;
+      topic_x_words[V*topic + word] += 1;
+      total_words_in_topics[topic] += 1;
 #else
       (*topic_x_words)(topic,word) += 1;
       (*total_words_in_topics)(topic,0) += 1;
 #endif
     }
 }
+
+void LDA::run_iterations(int num_iterations){
+   
+   Document target;
+
+   for(int iter_idx=0; iter_idx < num_iterations; ++iter_idx){
+     int file_idx=0;
+     //Big loop of iteration over files
+     //TODO: MPI Goes Here
+
+#if OMP_ENABLED
+   omp_set_num_threads(outer_thread_count);
+   #pragma omp parallel default (shared) private (file_idx, target) 
+   {
+    #pragma omp for //schedule(static)
+#endif
+     for(file_idx=0; file_idx < filenames.size(); ++file_idx){
+       
+       target = Document(filenames[file_idx]);
+       target.load_document();
+       target.load_topics();
+ 
+       //loop of iteration over words
+       int size_of_doc = target.num_words();
+       
+       //create_document_topic_distribution
+       boost::numeric::ublas::matrix<double> document_x_topic(1,K);
+ 
+       //initialize dist
+       for(int i=0; i<K; ++i){
+         document_x_topic(0,i) = 0;
+       }
+       
+       //fill distribution
+       for(int word_idx=0; word_idx < size_of_doc; ++word_idx){
+         int topic = target.get_word_topic(word_idx);
+         document_x_topic(0,topic) += 1;
+       }
+ 
+       //actual gibbs sampling
+       //this is where OpenMP would be nice.
+       //TODO: OpenMP atomic or barrier/syncs
+     int word_idx = 0;
+
+ #if OMP_ENABLED 
+     omp_set_num_threads(inner_thread_count);
+     #pragma omp parallel default (shared) private (word_idx)
+     {
+      #pragma omp for schedule(static)
+ #endif 
+       for(word_idx=0; word_idx < size_of_doc; ++word_idx){
+         //getword
+         int word = target.get_word(word_idx);
+         //gettopic
+         int topic = target.get_word_topic(word_idx);
+ 
+         //update dists.
+         //comment out the following since with OMP, topic_x_words could be poisoned a little bit and go below 1
+         //assert((*topic_x_words)(topic,word) > 0);
+         (*topic_x_words)(topic,word) -= 1;
+         (*total_words_in_topics)(topic,0) -= 1;
+         assert(document_x_topic(0,topic) > 0);
+         document_x_topic(0,topic) -= 1;
+ 
+         boost::numeric::ublas::matrix<double> topic_dist(K,1);
+         for(int topic_idx=0;topic_idx < K; ++topic_idx){
+           double topic_word_prob = ((double) (*topic_x_words)(topic_idx,word) + beta)/
+             ((double)(*total_words_in_topics)(topic_idx,0) + V*beta);
+           double topic_doc_prob = ((double)(document_x_topic(0,topic_idx) + alpha)/
+             ((double) size_of_doc + K*alpha/*CHECKTHIS*/));
+           topic_dist(topic_idx,0) = topic_word_prob * topic_doc_prob;
+         }
+ 
+         //sum of the topic dist vector
+         double normalizing_constant = sum(prod(
+           boost::numeric::ublas::scalar_vector<double>(topic_dist.size1()),
+           topic_dist));
+         for(int topic_idx=0; topic_idx < K; ++topic_idx){
+           topic_dist(topic_idx,0) = topic_dist(topic_idx,0)/normalizing_constant;
+         }
+         double prob = unif();
+         int new_topic = -1;
+         
+         while(prob > 0){
+           new_topic += 1;
+           prob -= topic_dist(new_topic,0);
+         }
+         assert(new_topic < K);
+ 
+         //assign_topic
+         target.set_word_topic(word_idx,new_topic);
+ 
+         //update dists
+         (*topic_x_words)(new_topic,word) += 1;
+         (*total_words_in_topics)(new_topic,0) += 1;
+         document_x_topic(0,new_topic) += 1;
+       }
+       target.save_topics();
+#if OMP_ENABLED
+     } //omp parallel inner loop
+#endif
+     }
+#if OMP_ENABLED
+  } //omp parallel outer loop
+#endif
+     if(iter_idx % thinning == 0){
+       if(iter_idx >= burnin)
+           print_neg_log_likelihood(vocab_path.substr(0, vocab_path.length()-9) + "neg_log_like.csv");
+       //TODO: PRINT
+     }
+ }
+ }
+
+void LDA::print_topic_dist(std::string topic_file_name) {
+  std::ofstream s(topic_file_name.c_str(), std::ofstream::out);
+  for(int i=0; i < K; ++i){
+    for(int j=0; j < V; ++j){
+#if MPI_ENABLED
+        s << _topic_x_words(i,j) << ",";
+#else
+        s << (*topic_x_words)(i,j) << ",";
+#endif
+    }
+    s << "\n";
+  } 
+  s.close();
+}
+
+void LDA::print_topic_dist_idx(std::string doc_dist_file_name, int index) { 
+  std::stringstream ss;
+  ss << doc_dist_file_name << "_" << index << ".csv";
+  print_topic_dist(ss.str());
+}
+
+void LDA::print_neg_log_likelihood(std::string file_name){
+  double log_L=0,temp_prob=0;
+  int word;
+  //calculate neg log likelihood
+  Document target;
+  for(int file_idx=0; file_idx < filenames.size(); ++file_idx){
+      
+    target = Document(filenames[file_idx]);
+    target.load_document();
+    target.load_topics();
+    //loop of iteration over words
+    int size_of_doc = target.num_words();
+    //create_document_topic_distribution
+    boost::numeric::ublas::matrix<double> document_x_topic(1,K);
+    //initialize dist
+    for(int i=0; i<K; ++i){
+      document_x_topic(0,i) = 0;
+    }
+    //fill distribution
+    for(int word_idx=0; word_idx < size_of_doc; ++word_idx){
+      int topic = target.get_word_topic(word_idx);
+      document_x_topic(0,topic) += 1;
+    }
+    for(int word_idx=0; word_idx < size_of_doc; ++word_idx){
+      word = target.get_word(word_idx);
+      temp_prob = 0;
+      for(int topic_idx = 0; topic_idx < K; ++topic_idx){
+#if MPI_ENABLED
+        //double topic_word_prob = ((double) _topic_x_words(topic_idx,word) + beta)/
+        //  ((double)_total_words_in_topics(topic_idx,0) + V*beta);
+        double topic_word_prob = ((double) topic_x_words[V*topic_idx+word] + beta)/
+          ((double) total_words_in_topics[topic_idx] + V*beta);
+#else
+        double topic_word_prob = ((double) (*topic_x_words)(topic_idx,word) + beta)/
+          ((double)(*total_words_in_topics)(topic_idx,0) + V*beta);
+#endif
+        double topic_doc_prob = ((double)(document_x_topic(0,topic_idx) + alpha)/
+          ((double) size_of_doc + K*alpha/*CHECKTHIS*/));
+        temp_prob += topic_word_prob * topic_doc_prob;
+      }
+      //std::cout << temp_prob << std::endl;
+      if(temp_prob == 0){
+        std::cout << "WTF";
+        temp_prob = 0.000001;
+      }
+      log_L += log2(temp_prob)/((double) filenames.size());
+    }
+
+  }
+
+  //print it
+  std::ofstream s(file_name.c_str(), std::ofstream::app);
+  s << -log_L << std::endl;  
+ 
+}
+
+//void LDA::print_doc_dist(int index);
+//void LDA::load_topic_dist(std::string topic_file_name);
 
 #if MPI_ENABLED
 void LDA::broadcast_data(std::vector<int> data_vector, int size) {
@@ -88,7 +284,7 @@ void LDA::broadcast_data(std::vector<int> data_vector, int size) {
 }
 #endif
 
-void LDA::run_iterations(int num_iterations){
+void LDA::run_iterations_mpi(int num_iterations){
   
   Document target;
   int first_file_idx, last_file_idx;
@@ -137,8 +333,8 @@ void LDA::run_iterations(int num_iterations){
 
         for (int i = 0; i<filenames.size(); i++)    {
             Document tmp_doc = Document(filenames[i]);
-            tmp_doc.load_document();
-            tmp_doc.load_topics();
+//            tmp_doc.load_document();
+//            tmp_doc.load_topics();
             update_tables(tmp_doc);
         }
       }
@@ -203,8 +399,11 @@ void LDA::run_iterations(int num_iterations){
         //comment out the following since with OMP, topic_x_words could be poisoned a little bit and go below 1
         //assert((*topic_x_words)(topic,word) > 0);
 #if MPI_ENABLED
-        _topic_x_words(topic,word) -= 1;
-        _total_words_in_topics(topic,0) -= 1;
+        //_topic_x_words(topic,word) -= 1;
+        //_total_words_in_topics(topic,0) -= 1;
+
+        topic_x_words[V*topic + word] -= 1;
+        total_words_in_topics[topic] -= 1;
 #else
         (*topic_x_words)(topic,word) -= 1;
         (*total_words_in_topics)(topic,0) -= 1;
@@ -214,8 +413,10 @@ void LDA::run_iterations(int num_iterations){
         boost::numeric::ublas::matrix<double> topic_dist(K,1);
         for(int topic_idx=0;topic_idx < K; ++topic_idx){
 #if MPI_ENABLED
-          double topic_word_prob = ((double) _topic_x_words(topic_idx,word) + beta)/
-            ((double)_total_words_in_topics(topic_idx,0) + V*beta);
+        // double topic_word_prob = ((double) _topic_x_words(topic_idx,word) + beta)/
+        //   ((double)_total_words_in_topics(topic_idx,0) + V*beta);
+        double topic_word_prob = ((double) topic_x_words[V*topic_idx + word] + beta)/
+           ((double )total_words_in_topics[topic_idx] + V*beta);
 #else
           double topic_word_prob = ((double) (*topic_x_words)(topic_idx,word) + beta)/
             ((double)(*total_words_in_topics)(topic_idx,0) + V*beta);
@@ -248,8 +449,10 @@ void LDA::run_iterations(int num_iterations){
 
         //update dists
 #if MPI_ENABLED
-        _topic_x_words(new_topic,word) += 1;
-        _total_words_in_topics(new_topic,0) += 1;
+        //_topic_x_words(new_topic,word) += 1;
+        //_total_words_in_topics(new_topic,0) += 1;
+        topic_x_words[V*new_topic + word] += 1;
+        total_words_in_topics[new_topic] += 1;
 #else
         (*topic_x_words)(new_topic,word) += 1;
         (*total_words_in_topics)(new_topic,0) += 1;
@@ -282,83 +485,4 @@ void LDA::run_iterations(int num_iterations){
 #endif
   } // outer for loop
 }
-
-void LDA::print_topic_dist(std::string topic_file_name) {
-  std::ofstream s(topic_file_name.c_str(), std::ofstream::out);
-  for(int i=0; i < K; ++i){
-    for(int j=0; j < V; ++j){
-#if MPI_ENABLED
-        s << _topic_x_words(i,j) << ",";
-#else
-        s << (*topic_x_words)(i,j) << ",";
-#endif
-    }
-    s << "\n";
-  } 
-  s.close();
-}
-void LDA::print_topic_dist_idx(std::string doc_dist_file_name, int index) { 
-  std::stringstream ss;
-  ss << doc_dist_file_name << "_" << index << ".csv";
-  print_topic_dist(ss.str());
-}
-
-void LDA::print_neg_log_likelihood(std::string file_name){
-  double log_L=0,temp_prob=0;
-  int word;
-  //calculate neg log likelihood
-  Document target;
-  for(int file_idx=0; file_idx < filenames.size(); ++file_idx){
-      
-    target = Document(filenames[file_idx]);
-    target.load_document();
-    target.load_topics();
-    //loop of iteration over words
-    int size_of_doc = target.num_words();
-    //create_document_topic_distribution
-    boost::numeric::ublas::matrix<double> document_x_topic(1,K);
-    //initialize dist
-    for(int i=0; i<K; ++i){
-      document_x_topic(0,i) = 0;
-    }
-    //fill distribution
-    for(int word_idx=0; word_idx < size_of_doc; ++word_idx){
-      int topic = target.get_word_topic(word_idx);
-      document_x_topic(0,topic) += 1;
-    }
-    for(int word_idx=0; word_idx < size_of_doc; ++word_idx){
-      word = target.get_word(word_idx);
-      temp_prob = 0;
-      for(int topic_idx = 0; topic_idx < K; ++topic_idx){
-#if MPI_ENABLED
-        double topic_word_prob = ((double) _topic_x_words(topic_idx,word) + beta)/
-          ((double)_total_words_in_topics(topic_idx,0) + V*beta);
-#else
-        double topic_word_prob = ((double) (*topic_x_words)(topic_idx,word) + beta)/
-          ((double)(*total_words_in_topics)(topic_idx,0) + V*beta);
-#endif
-        double topic_doc_prob = ((double)(document_x_topic(0,topic_idx) + alpha)/
-          ((double) size_of_doc + K*alpha/*CHECKTHIS*/));
-        temp_prob += topic_word_prob * topic_doc_prob;
-      }
-      //std::cout << temp_prob << std::endl;
-      if(temp_prob == 0){
-        std::cout << "WTF";
-        temp_prob = 0.000001;
-      }
-      log_L += log2(temp_prob)/((double) filenames.size());
-    }
-
-  }
-
-  //print it
-  std::ofstream s(file_name.c_str(), std::ofstream::app);
-  s << -log_L << std::endl;  
- 
-}
-
-//void LDA::print_doc_dist(int index);
-//void LDA::load_topic_dist(std::string topic_file_name);
-
-
 

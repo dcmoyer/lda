@@ -26,6 +26,7 @@ int main(int argc, char* argv[]){
   int K, N;
   std::stringstream ss;
   int rank = 0;
+  int num_threads;
 
 #if MPI_ENABLED
   MPI_Init(&argc, &argv);
@@ -33,8 +34,12 @@ int main(int argc, char* argv[]){
   MPI_Errhandler_set(MPI_COMM_WORLD, MPI_ERRORS_RETURN);
 #endif
 
+#if OMP_ENABLED
   //cmd args
-  if(argc != 4){
+  if(argc != 5){
+#else
+  if (argc!=4){
+#endif
     std::cout << "<filename>:" + std::string(argv[0])
        + ": ERROR wrong number of args";
     return 1;
@@ -67,7 +72,6 @@ int main(int argc, char* argv[]){
   //std::clock_t start;
  
   for(int i=0; i < N; ++i){
-
     ss << i;
     std::string s = ss.str();
     filenames.push_back(path_prefix + s + ".txt");
@@ -79,7 +83,25 @@ int main(int argc, char* argv[]){
 #endif
     ss.str("");
   }
-  
+ 
+#if OMP_ENABLED
+  std::istringstream issT(argv[3]);
+  issT >> num_threads;
+//  num_threads = atoi(argv[4]);
+
+  LDA lda(filenames,
+                prefix,
+                vocab_path,
+                K,
+                1,//alpha,
+                1,//beta,
+                2,//burnin
+                1,//thinning
+                num_threads,//num_threads outer loop
+                1//num_threads inner loop
+              );
+  lda.initialize();
+#elif MPI_ENABLED 
   LDA lda(filenames,
                 prefix,
                 vocab_path,
@@ -98,6 +120,19 @@ int main(int argc, char* argv[]){
   {
     lda.initialize();
   }
+#else
+  LDA lda(filenames,
+                prefix,
+                vocab_path,
+                K,
+                1,//alpha,
+                1,//beta,
+                2,//burnin
+                1//thinning
+              );
+  lda.initialize();
+#endif
+
 #if 0
   /*for (int j = 0; j < list_of_filenames.size(); ++j)
     std::cout << list_of_filenames[j] << std::endl;
@@ -113,13 +148,18 @@ int main(int argc, char* argv[]){
 #else
   //start = std::clock();
   double start = read_timer();
+#if MPI_ENABLED
+  lda.run_iterations_mpi(100);
+#else
   lda.run_iterations(100);
+#endif
   double end = read_timer();
 #endif
 
 #if MPI_ENABLED
   if (rank == 0) {
-    std::cout << "Runtime: " << (end - start) << std::endl;
+    std::cout << "For "<<num_threads<<" threads, the runtime is: " << (end - start) 
+        << " on the "<<prefix<<" dataset"<< std::endl;
     lda.print_topic_dist_idx(path_prefix + "topic_dist",0);
   }
 

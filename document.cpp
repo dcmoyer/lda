@@ -59,7 +59,11 @@ int Document::get_word(int index){
 }
 
 int Document::get_word_topic(int index){
-  assert(index < topic_assignments.size());
+  //assert(index < topic_assignments.size());
+  if (index >= topic_assignments.size())    {
+    std::cout<<"Assertion failed! at thread id: "<<omp_get_thread_num()<<"and file name: "<<path_to_document.c_str()<<std::endl;
+    exit(0);
+    }
   return topic_assignments[index];
 }
 

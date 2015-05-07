@@ -15,8 +15,8 @@
 #include<boost/numeric/ublas/io.hpp>
 #include<boost/numeric/ublas/matrix.hpp>
 
-#define OMP_ENABLED 0 
-#define MPI_ENABLED 1
+#define OMP_ENABLED 1 
+#define MPI_ENABLED 0
 
 #endif
 

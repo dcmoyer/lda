@@ -20,6 +20,9 @@ private:
   double alpha;
   double beta;
   int sync_frequency;
+  int inner_thread_count;
+  int outer_thread_count;
+
 #if MPI_ENABLED
   std::vector<int> topic_x_words;
   std::vector<int> total_words_in_topics;
@@ -27,6 +30,7 @@ private:
   boost::numeric::ublas::matrix<int>* topic_x_words;
   boost::numeric::ublas::matrix<int>* total_words_in_topics;
 #endif
+
 
 public:
   // have to make them public and static since OMP does not allow class member to be shared among threads 
@@ -38,7 +42,8 @@ public:
   LDA();
   LDA(std::vector<std::string>& list_of_filenames, std::string _prefix,
     std::string _path, int _K,
-    double _alpha, double _beta, int _burnin, int _thinning, int _sync_frequency){
+    double _alpha, double _beta, int _burnin, int _thinning, 
+    int _outer_loop_num_threads, int _inner_loop_num_threads){
     for(int i = 0; i < list_of_filenames.size(); ++i){
       filenames.push_back(list_of_filenames[i]);
     }
@@ -50,8 +55,9 @@ public:
     beta = _beta;
     burnin = _burnin;
     thinning = _thinning;
-    sync_frequency = _sync_frequency;
-
+    inner_thread_count = _inner_loop_num_threads;
+    outer_thread_count = _outer_loop_num_threads;
+  
     int word;
     std::string true_word;
     char c;
@@ -67,10 +73,10 @@ public:
     topic_x_words = std::vector<int> (K*V);
     total_words_in_topics = std::vector<int> (K);
 #else
-    std::cout << "all but mats\n";
+//    std::cout << "all but mats\n";
     topic_x_words = new boost::numeric::ublas::matrix<int>(K,V);
     total_words_in_topics = new boost::numeric::ublas::matrix<int>(K,1);
-    std::cout << "mats\n";
+//    std::cout << "mats\n";
 #endif
   }
 
@@ -99,6 +105,7 @@ public:
 
   void initialize();
   void run_iterations(int num_iterations);
+  void run_iterations_mpi(int num_iterations);
   void initialize_tables();
   void update_tables(Document target);
   void broadcast_data(std::vector<int> data_vector, int size);

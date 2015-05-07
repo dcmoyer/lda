@@ -3,7 +3,8 @@ BOOST = -I ~/boost/boost_1_57_0
 OMP = -fopenmp
 OPTIONS = -g
 GPP = g++
-CXX = mpicxx
+#CXX = mpicxx
+CXX = g++
 
 default: sampler
 
