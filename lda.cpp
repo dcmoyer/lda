@@ -181,7 +181,11 @@ void LDA::run_iterations(int num_iterations){
 #endif
      if(iter_idx % thinning == 0){
        if(iter_idx >= burnin)
+#if OMP_ENABLED
+           print_neg_log_likelihood(vocab_path.substr(0, vocab_path.length()-9) + "neg_log_likeOMP.csv");
+#else
            print_neg_log_likelihood(vocab_path.substr(0, vocab_path.length()-9) + "neg_log_like.csv");
+#endif
        //TODO: PRINT
      }
  }
