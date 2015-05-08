@@ -160,14 +160,18 @@ int main(int argc, char* argv[]){
   if (rank == 0) {
     std::cout << "For "<<num_threads<<" threads, the runtime is: " << (end - start) 
         << " on the "<<prefix<<" dataset"<< std::endl;
-    lda.print_topic_dist_idx(path_prefix + "topic_dist",0);
+    lda.print_topic_dist_idx(path_prefix + "topic_distMPI",0);
   }
 
   MPI_Finalize();
+#elif OMP_ENABLED
+    std::cout << "For "<<num_threads<<" threads, the runtime is: " << (end - start)
+        << " on the "<<prefix<<" dataset"<< std::endl;
+    lda.print_topic_dist_idx(path_prefix + "topic_distOMP",0);
 #else
     std::cout << "For "<<num_threads<<" threads, the runtime is: " << (end - start)
         << " on the "<<prefix<<" dataset"<< std::endl;
-    lda.print_topic_dist_idx(path_prefix + "topic_dist",0);
+    lda.print_topic_dist_idx(path_prefix + "topic_distSER",0);
 #endif
 }
 
