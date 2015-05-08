@@ -470,16 +470,24 @@ void LDA::run_iterations_mpi(int num_iterations){
         if(iter_idx < burnin){
           continue;
         }
-        print_neg_log_likelihood(vocab_path.substr(0, vocab_path.length()-9) + "neg_log_like.csv");
+        print_neg_log_likelihood(vocab_path.substr(0, vocab_path.length()-9) + "neg_log_likeMPI.csv");
         //TODO: PRINT
       }
+    }
+#elif OMP_ENABLED
+    if(iter_idx % thinning == 0){
+      if(iter_idx < burnin){
+        continue;
+      }
+      print_neg_log_likelihood(vocab_path.substr(0, vocab_path.length()-9) + "neg_log_likeOMP.csv");
+      //TODO: PRINT
     }
 #else
     if(iter_idx % thinning == 0){
       if(iter_idx < burnin){
         continue;
       }
-      print_neg_log_likelihood(vocab_path.substr(0, vocab_path.length()-9) + "neg_log_like.csv");
+      print_neg_log_likelihood(vocab_path.substr(0, vocab_path.length()-9) + "neg_log_likeSER.csv");
       //TODO: PRINT
     }
 #endif
